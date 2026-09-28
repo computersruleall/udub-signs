@@ -1,0 +1,981 @@
+<title>Wayfinder Sign Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #e9ecef;
+  --panel: #fbfcfd;
+  --panel-2: #f1f3f6;
+  --ink: #15181d;
+  --muted: #5b6370;
+  --line: #d3d8df;
+  --accent: #f2b01e;
+  --accent-ink: #15181d;
+  --accent-text: #8a5d00;
+  --danger: #b3261e;
+  --check-a: #d9dde2;
+  --check-b: #c9ced5;
+  --focus: #1f6feb;
+  --ui: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --display: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111317;
+    --panel: #1a1d22;
+    --panel-2: #22262c;
+    --ink: #e8ebef;
+    --muted: #97a0ab;
+    --line: #2e333a;
+    --accent-text: #f2b01e;
+    --danger: #ff8a80;
+    --check-a: #24282e;
+    --check-b: #1c1f24;
+    --focus: #6aa7ff;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111317;
+  --panel: #1a1d22;
+  --panel-2: #22262c;
+  --ink: #e8ebef;
+  --muted: #97a0ab;
+  --line: #2e333a;
+  --accent-text: #f2b01e;
+  --danger: #ff8a80;
+  --check-a: #24282e;
+  --check-b: #1c1f24;
+  --focus: #6aa7ff;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--ui); font-size: 14px; padding-inline: 16px; padding-block: 16px 40px; }
+.app { max-width: 1500px; margin: 0 auto; display: grid; gap: 16px; }
+header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 26px; margin: 0; letter-spacing: .01em; display: flex; align-items: center; gap: 10px; }
+.logo { display: inline-grid; place-items: center; width: 30px; height: 30px; background: #191919; color: #fff; font: 700 17px var(--display); }
+.logo span { background: var(--accent); color: #191919; width: 20px; height: 20px; display: grid; place-items: center; }
+header p { margin: 0; color: var(--muted); max-width: 70ch; }
+.grid { display: grid; grid-template-columns: minmax(340px, 440px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .stage { position: static !important; } }
+.panel { background: var(--panel); border: 1px solid var(--line); }
+.section { padding: 14px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.section:last-child { border-bottom: 0; }
+.section h2 { margin: 0; font: 700 12px var(--display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.row > label { flex: 1 1 90px; }
+label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 600; min-width: 0; }
+input, select, textarea, button { font: inherit; color: var(--ink); }
+input[type="text"], input[type="number"], select, textarea {
+  width: 100%; min-width: 0; background: var(--panel-2); border: 1px solid var(--line); padding: 6px 8px; border-radius: 0; font-size: 14px; font-weight: 500;
+}
+input[type="number"] { font-family: var(--mono); font-size: 13px; }
+input[type="color"] { width: 38px; height: 32px; padding: 2px; background: var(--panel-2); border: 1px solid var(--line); cursor: pointer; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.hint b { color: var(--ink); font-weight: 600; }
+.mono { font-family: var(--mono); font-size: 12px; }
+button { cursor: pointer; background: var(--panel-2); border: 1px solid var(--line); padding: 6px 10px; font-weight: 600; font-size: 13px; }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+button.primary:hover { filter: brightness(1.05); }
+button.icon { padding: 3px 7px; font-size: 13px; line-height: 1.2; }
+button.danger { color: var(--danger); }
+.anchor { display: grid; grid-template-columns: repeat(3, 22px); gap: 3px; }
+.anchor button { width: 22px; height: 22px; padding: 0; }
+.anchor button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); font-weight: 500; }
+.colorbox { display: flex; gap: 6px; align-items: center; }
+.swatches { display: flex; flex-wrap: wrap; gap: 3px; }
+.swatches button { width: 18px; height: 18px; padding: 0; border: 1px solid rgba(0,0,0,.25); }
+
+/* tree */
+#tree { display: grid; gap: 6px; }
+.node { border: 1px solid var(--line); background: var(--panel); }
+.node.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.node-head { display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 8px; background: var(--panel-2); cursor: pointer; }
+.chip { font: 700 10px var(--display); text-transform: uppercase; letter-spacing: .1em; padding: 2px 6px; background: #191919; color: #fff; }
+.chip.row, .chip.column { background: var(--accent); color: #191919; }
+.summary { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.dot { display: inline-block; width: 10px; height: 10px; vertical-align: -1px; margin-right: 4px; border: 1px solid rgba(0,0,0,.3); }
+.fields { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; align-items: end; }
+.fields > label { flex: 1 1 80px; }
+.fields > label.wide { flex-basis: 100%; }
+.kids { display: grid; gap: 6px; padding: 0 8px 8px 14px; border-left: 3px solid var(--line); margin-left: 8px; }
+.adder { padding: 0 8px 8px 22px; }
+.adder select { width: auto; font-size: 12px; padding: 4px 6px; }
+
+/* stage */
+.stage { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); display: grid; gap: 0; }
+.stage-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.stats { display: flex; flex-wrap: wrap; gap: 4px 16px; flex: 1; }
+.stat { display: grid; }
+.stat span:first-child { font: 700 10px var(--display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.stat span:last-child { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.viewport { overflow: auto; padding: 24px; min-height: 260px; display: grid; place-items: center;
+  background-color: var(--check-a);
+  background-image: linear-gradient(45deg, var(--check-b) 25%, transparent 25%, transparent 75%, var(--check-b) 75%), linear-gradient(45deg, var(--check-b) 25%, transparent 25%, transparent 75%, var(--check-b) 75%);
+  background-size: 16px 16px; background-position: 0 0, 8px 8px; }
+.frame { position: relative; line-height: 0; user-select: none; -webkit-user-select: none; }
+.frame img { image-rendering: pixelated; display: block; max-width: none; }
+.frame canvas { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
+.frame canvas.grab { cursor: grab; }
+.frame canvas.grabbing { cursor: grabbing; }
+.warn { color: var(--danger); font-weight: 600; }
+.foot { padding: 10px 14px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.seg { display: inline-flex; }
+.seg button { border-right-width: 0; }
+.seg button:last-child { border-right-width: 1px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+details summary { cursor: pointer; font: 700 12px var(--display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+textarea { font-family: var(--mono); font-size: 12px; min-height: 180px; resize: vertical; }
+.actions { display: inline-flex; gap: 8px; }
+.exportbox, .exporthint { padding: 10px 14px; border-top: 1px solid var(--line); margin: 0; display: grid; gap: 6px; }
+.exportbox[hidden], .exporthint[hidden] { display: none; }
+.cmdrow { display: flex; gap: 6px; }
+.cmdrow input { font-family: var(--mono); font-size: 12px; }
+.exportbox a { color: var(--accent-text); font-weight: 600; }
+#nameHint.warn { color: var(--danger); font-weight: 600; }
+#toast { min-height: 1.2em; font-size: 13px; color: var(--accent-text); font-weight: 600; }
+@media (prefers-reduced-motion: no-preference) { .node { transition: border-color .12s; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1><span class="logo"><span>W</span></span>Wayfinder</h1>
+    <p>Build station signs from rows, columns, badges, text and arrows. The PNG covers the map area; the sign sits inside it and everything scales to fit. Every pixel is snapped to a Minecraft map color.</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="section">
+        <h2>Sign</h2>
+        <div class="row">
+          <label>Start from
+            <select id="preset"></select>
+          </label>
+          <label>Sign name
+            <input type="text" id="name" maxlength="60" spellcheck="false">
+          </label>
+        </div>
+        <p class="hint" id="nameHint">Used for My signs, the PNG file and the ImageFrame name.</p>
+      </div>
+
+      <div class="section">
+        <h2>Map area <span class="mono" id="mapsHint"></span></h2>
+        <div class="row">
+          <label>Maps wide <input type="number" id="mapsW" min="1" max="64" step="1"></label>
+          <label>Maps tall <input type="number" id="mapsH" min="1" max="32" step="1"></label>
+          <label>Outside sign
+            <select id="outside"><option value="transparent">Transparent</option><option value="color">Solid color</option></select>
+          </label>
+          <input type="color" id="outsideColor" aria-label="Outside color">
+        </div>
+        <p class="hint">One map = one item frame = 128 × 128 px.</p>
+      </div>
+
+      <div class="section">
+        <h2>Sign size <span class="mono" id="signHint"></span></h2>
+        <div class="row">
+          <label>Width px <input type="number" id="signW" min="8" step="1"></label>
+          <label>Height px <input type="number" id="signH" min="8" step="1"></label>
+          <label style="flex:0 0 auto">Anchor <div class="anchor" id="anchor"></div></label>
+        </div>
+        <div class="row">
+          <button id="fill">Fill map area</button>
+          <label>Side padding px <input type="number" id="padX" min="0" step="1"></label>
+          <label>Top/bottom padding px <input type="number" id="padY" min="0" step="1"></label>
+          <label>Content scale % <input type="number" id="scale" min="20" max="100" step="5"></label>
+          <label style="flex:0 0 auto">Sign color <span class="colorbox"><input type="color" id="signColor"></span></label>
+        </div>
+        <p class="hint">Top/bottom padding sets how big the text gets on a bar. Content scale below 100% shrinks everything further; flexible spacers still stretch to the sign edges.</p>
+      </div>
+
+      <div class="section">
+        <h2>Layout <span style="font-family:var(--ui);text-transform:none;letter-spacing:0;font-weight:500">click a piece to select it; drag it on the preview to reorder</span></h2>
+        <div id="tree"></div>
+      </div>
+
+      <div class="section">
+        <h2>My signs</h2>
+        <div class="row">
+          <label>Saved in this browser
+            <select id="library"></select>
+          </label>
+          <button id="libLoad">Load</button>
+          <button id="libSave">Save</button>
+          <button id="libDel" class="danger">Delete</button>
+        </div>
+        <details>
+          <summary>JSON</summary>
+          <div style="display:grid;gap:8px;margin-top:8px">
+            <textarea id="json" spellcheck="false" aria-label="Sign JSON"></textarea>
+            <div class="row"><button id="jsonCopy">Copy</button><button id="jsonApply">Apply JSON</button></div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="panel stage">
+      <div class="stage-bar">
+        <div class="stats">
+          <div class="stat"><span>Image</span><span id="stImg"></span></div>
+          <div class="stat"><span>Blocks</span><span id="stBlocks"></span></div>
+          <div class="stat"><span>Sign</span><span id="stSign"></span></div>
+          <div class="stat"><span>Smallest text</span><span id="stText"></span></div>
+        </div>
+        <div class="seg" role="group" aria-label="Zoom" id="zoom"></div>
+      </div>
+      <div class="viewport" id="viewport">
+        <div class="frame" id="frame"><img id="out" alt="Rendered sign" draggable="false"><canvas id="overlay"></canvas></div>
+      </div>
+      <div class="foot">
+        <label class="check"><input type="checkbox" id="grid" checked> Show map grid</label>
+        <span id="toast" role="status"></span>
+        <span class="actions">
+          <button id="download">Download PNG</button>
+          <button class="primary" id="export" hidden>Export to GitHub</button>
+        </span>
+      </div>
+      <div class="exportbox" id="exportBox" hidden>
+        <label>ImageFrame command
+          <span class="cmdrow"><input type="text" id="cmd" readonly aria-label="ImageFrame command"><button id="cmdCopy">Copy</button></span>
+        </label>
+        <p class="hint">Paste it in chat in-game, then place the map on a <b id="cmdSize"></b> grid of item frames. Image: <a id="cmdLink" target="_blank" rel="noopener">view on GitHub</a></p>
+      </div>
+      <p class="hint exporthint" id="exportHint" hidden>Export to GitHub works when you open the builder with <b>Start Wayfinder.bat</b> in your <b>udub-signs</b> folder.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Minecraft map palette ----------
+const BASE = [
+  [127,178,56],[247,233,163],[199,199,199],[255,0,0],[160,160,255],[167,167,167],[0,124,0],[255,255,255],
+  [164,168,184],[151,109,77],[112,112,112],[64,64,255],[143,119,72],[255,252,245],[216,127,51],[178,76,216],
+  [102,153,216],[229,229,51],[127,204,25],[242,127,165],[76,76,76],[153,153,153],[76,127,153],[127,63,178],
+  [51,76,178],[102,76,51],[102,127,51],[153,51,51],[25,25,25],[250,238,77],[92,219,213],[74,128,255],
+  [0,217,58],[129,86,49],[112,2,0],[209,177,161],[159,82,36],[149,87,108],[112,108,138],[186,133,36],
+  [103,117,53],[160,77,78],[57,41,35],[135,107,98],[87,92,92],[122,73,88],[76,62,92],[76,50,35],
+  [76,82,42],[142,60,46],[37,22,16],[189,48,49],[148,63,97],[92,25,29],[22,126,134],[58,142,140],
+  [86,44,62],[20,180,133],[100,100,100],[216,175,147],[127,167,150]
+];
+const PAL = [];
+for (const [r,g,b] of BASE) for (const m of [180,220,255,135]) PAL.push([Math.floor(r*m/255), Math.floor(g*m/255), Math.floor(b*m/255)]);
+const snapCache = new Map();
+function snapRGB(r,g,b) {
+  const key = (r<<16)|(g<<8)|b;
+  let hit = snapCache.get(key);
+  if (hit) return hit;
+  let best = PAL[0], bd = Infinity;
+  for (const p of PAL) {
+    const dr = r-p[0], dg = g-p[1], db = b-p[2];
+    const d = 2*dr*dr + 4*dg*dg + 3*db*db;
+    if (d < bd) { bd = d; best = p; }
+  }
+  snapCache.set(key, best);
+  return best;
+}
+const hex = c => '#' + c.map(v => v.toString(16).padStart(2,'0')).join('');
+const unhex = h => [1,3,5].map(i => parseInt(h.slice(i,i+2),16));
+
+const LINE_COLORS = {
+  Red:'#ff0000', 'Dark red':'#993333', Orange:'#d87f33', Gold:'#faee4d', Yellow:'#e5e533', Lime:'#7fcc19',
+  Green:'#00d93a', Olive:'#667f33', Teal:'#167e86', Cyan:'#5cdbd5', 'Light blue':'#6699d8', Blue:'#4a80ff',
+  Navy:'#334cb2', Purple:'#7f3fb2', Magenta:'#b24cd8', Pink:'#f27fa5', Brown:'#664c33', Gray:'#4c4c4c',
+  White:'#ffffff', 'Light gray':'#c7c7c7', Black:'#191919', 'Exit green':'#007c00'
+};
+
+// ---------- document model ----------
+const uid = () => Math.random().toString(36).slice(2, 9);
+const T = (text, size, o={}) => ({type:'text', text, size, weight:'bold', condensed:false, color:'#ffffff', ...o});
+const SUB = (text, size) => T(text, size, {weight:'semibold', condensed:true, color:'#c7c7c7'});
+const B = (text, color, size, o={}) => ({type:'badge', text, color, size, shape:'square', textColor:'auto', ...o});
+const A = (dir, size, o={}) => ({type:'arrow', dir, size, color:'#ffffff', ...o});
+const S = (size, flex=false) => ({type:'spacer', size, flex});
+const R = (children, o={}) => ({type:'row', children, gap:0, align:'center', justify:'start', pad:0, bg:null, ...o});
+const C = (children, o={}) => ({type:'column', children, gap:0, align:'start', justify:'start', pad:0, bg:null, ...o});
+// Proportions from the reference renders, with the badge as the unit:
+//   large  "Line" (stacked signs, where it sits over a destination) 1.15 × badge
+//   medium "Line" (the line stands alone, e.g. "[7] Line ↗")   0.65 × badge
+//   small  "Line" (a destination follows)                       0.41 × badge
+//   destination text and arrows                                  0.74 × badge
+//   large destination (a row as tall as a badge row)             1.30 × badge
+// "Line" is always smaller than the badge: even large Line's capitals are ~80% of it.
+const LARGE = 1.15, MED = 0.65, SMALL = 0.41, DEST = 0.74, DEST_L = 1.30;
+const lineTag = (n, color, bs, mode = 'medium', o = {}) =>
+  R([B(n, color, bs, o), S(bs * 0.17), T('Line', bs * ({ small: SMALL, large: LARGE }[mode] || MED))]);
+
+// Badge at the named "Large" size (1.25 × standard) with "Line (large)" beside it.
+const largeTag = (n, color) => R([B(n, color, BADGE * 1.25), S(BADGE * 0.2), T('Line', BADGE * LARGE)]);
+
+// Every template fills its map area. On 1-block bars top/bottom padding 34 leaves 60 px,
+// so the badge lands near 60 px - the scale of the reference renders.
+const base = (mapsW, mapsH, o = {}) => ({ mapsW, mapsH, signW: mapsW * 128, signH: mapsH * 128, anchor: 'mc',
+  padX: 22, padY: 34, scale: 100, signColor: '#191919', outside: 'transparent', outsideColor: '#191919', ...o });
+const BADGE = 12, DST = BADGE * DEST;
+const PRESETS = {
+  'Split, arrow in the middle': () => ({ ...base(6, 1, { padY: 16 }),
+    root: R([
+      // the badge row and the destination row are about equal height, as in the reference
+      C([largeTag('1', LINE_COLORS.Red), S(3.5), T('To Western Border', BADGE * DEST_L)]),
+      S(10, true), A('down', BADGE * 1.1), S(10, true),
+      C([largeTag('9', LINE_COLORS['Light blue']), S(3.5), T('To Sai no Kawara', BADGE * DEST_L)])
+    ])
+  }),
+  'Line + destination': () => ({ ...base(6, 1),
+    root: R([lineTag('2', LINE_COLORS.Magenta, BADGE, 'small'), S(4), T('To Northeast Border', DST), S(3), A('up', DST)], {justify:'center'})
+  }),
+  'Line only': () => ({ ...base(3, 1),
+    root: R([lineTag('7', LINE_COLORS.Pink, BADGE), S(3), A('up-right', DST)], {justify:'center'})
+  }),
+  'Platform bar (loop)': () => ({ ...base(14, 1),
+    root: R([
+      R([A('left', DST), S(3), T("Ibarakasen's Mansion", DST)]), S(6, true),
+      lineTag('4', LINE_COLORS.Teal, BADGE), S(6, true),
+      R([A('left', DST), S(3), C([T('Outer Loop', BADGE * 0.66), S(1.8), SUB('(Counter-Clockwise)', BADGE * 0.36)], {align:'center'})]), S(6, true),
+      lineTag('10', LINE_COLORS.Gold, BADGE), S(6, true),
+      R([C([T('Inner Loop', BADGE * 0.66), S(1.8), SUB('(Clockwise)', BADGE * 0.36)], {align:'center'}), S(3), A('right', DST)]), S(6, true),
+      lineTag('4', LINE_COLORS.Teal, BADGE), S(6, true),
+      R([T('Sanzu River Ferry Pier', DST), S(3), A('right', DST)])
+    ])
+  }),
+  'Two lines, one bar': () => ({ ...base(12, 1),
+    root: R([
+      R([lineTag('1', LINE_COLORS.Red, BADGE, 'small'), S(4), C([T('To Western Border', DST), S(1.8), SUB('Westbound', BADGE * 0.36)]), S(3), A('up', DST)]),
+      S(10, true),
+      R([lineTag('9', LINE_COLORS.Cyan, BADGE, 'small'), S(4), T('To Sai no Kawara', DST), S(3), A('up', DST)]),
+      S(10, true),
+      R([lineTag('3', LINE_COLORS.Lime, BADGE), S(3), A('up', DST)])
+    ])
+  }),
+  'Exit, pillar': () => ({ ...base(1, 2, { padX: 8, padY: 8 }),
+    // min width = min height keeps the green panel square however the sign is sized
+    root: C([
+      C([T('EXIT', 11)], {bg:LINE_COLORS['Exit green'], minW:30, minH:30, align:'center', justify:'center'}),
+      S(4, true), R([A('u-turn', 18)], {justify:'center'}), S(4, true)
+    ], {align:'center'})
+  }),
+  'Blank': () => ({ ...base(5, 1),
+    root: R([lineTag('1', LINE_COLORS.Red, BADGE, 'small'), S(4), T('Destination', DST), S(3), A('up', DST)], {justify:'center'})
+  })
+};
+
+function withIds(n) { n.id = uid(); if (n.children) n.children.forEach(withIds); return n; }
+function cleanDoc(d) { return JSON.parse(JSON.stringify(d, (k, v) => (k === 'id' || k === '_m') ? undefined : v)); }
+function presetDoc(name) { const d = PRESETS[name](); d.name = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); d.sid = uid(); withIds(d.root); return d; }
+
+let doc, selId = null, zoomMode = 'fit', lastRender = null;
+
+// ---------- storage (per-viewer convenience only) ----------
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// ---------- layout ----------
+const CAP = 0.70;          // Barlow cap height / em
+const WEIGHT = { regular: 500, semibold: 600, bold: 700 };
+const mctx = document.createElement('canvas').getContext('2d');
+function fontFor(n, px) {
+  const fam = n.condensed ? '"Barlow Semi Condensed"' : '"Barlow"';
+  return `${WEIGHT[n.weight] || 700} ${px}px ${fam}, "Arial Narrow", Arial, sans-serif`;
+}
+function textW(str, font) { mctx.font = font; return mctx.measureText(str).width; }
+const isBox = n => n.type === 'row' || n.type === 'column';
+const num = (v, d=0) => Number.isFinite(+v) ? +v : d;
+function badgeNumSize(n) { return n.size * ((n.text || '').length > 1 ? 0.64 : 0.8); }
+
+function measure(n) {
+  let w = 0, h = 0;
+  if (n.type === 'text') {
+    w = textW(n.text || '', fontFor(n, 100)) / 100 * num(n.size, 10);
+    h = num(n.size, 10) * CAP;
+  } else if (n.type === 'badge') {
+    const ns = badgeNumSize(n), tw = textW(n.text || '', fontFor({weight:'bold'}, 100)) / 100 * ns;
+    if (n.shape === 'circle') { w = h = Math.max(n.size, tw + n.size * 0.45); }
+    else { h = n.size; w = Math.max(n.size, tw + n.size * 0.32); }
+  } else if (n.type === 'arrow' || n.type === 'spacer') {
+    w = h = num(n.size, 4);
+  } else if (isBox(n)) {
+    const row = n.type === 'row', kids = n.children.map(measure), gap = num(n.gap);
+    const main = kids.reduce((s, k) => s + (row ? k.w : k.h), 0) + gap * Math.max(0, kids.length - 1);
+    const cross = kids.reduce((s, k) => Math.max(s, row ? k.h : k.w), 0);
+    const pad = num(n.pad) * 2;
+    w = Math.max((row ? main : cross) + pad, num(n.minW)); h = Math.max((row ? cross : main) + pad, num(n.minH));
+  }
+  n._m = { w, h };
+  return n._m;
+}
+
+function place(n, x, y, w, h, boxes) {
+  boxes.push({ n, x, y, w, h });
+  if (!isBox(n)) return;
+  const row = n.type === 'row', pad = num(n.pad), gap = num(n.gap);
+  const ix = x + pad, iy = y + pad, iw = w - 2*pad, ih = h - 2*pad;
+  const kids = n.children, k = kids.length;
+  const natMain = kids.reduce((s, c) => s + (row ? c._m.w : c._m.h), 0) + gap * Math.max(0, k - 1);
+  const availMain = row ? iw : ih, availCross = row ? ih : iw;
+  const extra = availMain - natMain;
+  const flex = kids.filter(c => c.type === 'spacer' && c.flex).length;
+  let cursor = 0, g = gap, share = 0;
+  if (extra > 0) {
+    if (flex) share = extra / flex;
+    else if (n.justify === 'center') cursor = extra / 2;
+    else if (n.justify === 'end') cursor = extra;
+    else if (n.justify === 'between') { if (k > 1) g = gap + extra / (k - 1); else cursor = extra / 2; }
+  }
+  for (const c of kids) {
+    const cm = (row ? c._m.w : c._m.h) + (c.type === 'spacer' && c.flex ? share : 0);
+    let cc = row ? c._m.h : c._m.w;
+    if (n.align === 'stretch' && isBox(c)) cc = availCross;
+    const off = n.align === 'start' ? 0 : n.align === 'end' ? availCross - cc : (availCross - cc) / 2;
+    if (row) place(c, ix + cursor, iy + off, cm, cc, boxes);
+    else place(c, ix + off, iy + cursor, cc, cm, boxes);
+    cursor += cm + g;
+  }
+}
+
+// ---------- drawing ----------
+function lum(h) { const [r,g,b] = unhex(h); return 0.299*r + 0.587*g + 0.114*b; }
+function drawArrow(ctx, cx, cy, size, dir, color) {
+  ctx.fillStyle = color; ctx.strokeStyle = color;
+  if (dir === 'u-turn' || dir === 'u-turn-left') {
+    const s = size, m = dir === 'u-turn' ? 1 : -1, r = s * 0.24, lw = s * 0.16, ay = cy - s * 0.06;
+    const lx = cx - m * r, rx = cx + m * r;
+    ctx.lineWidth = lw; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(lx, cy + s * 0.46);
+    ctx.lineTo(lx, ay);
+    ctx.arc(cx, ay, r, m > 0 ? Math.PI : 0, m > 0 ? 0 : Math.PI, m < 0);
+    ctx.lineTo(rx, ay + s * 0.08);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rx - s * 0.22, ay + s * 0.06); ctx.lineTo(rx + s * 0.22, ay + s * 0.06); ctx.lineTo(rx, ay + s * 0.36);
+    ctx.closePath(); ctx.fill();
+    return;
+  }
+  const ang = { up:0, 'up-right':45, right:90, 'down-right':135, down:180, 'down-left':225, left:270, 'up-left':315 }[dir] ?? 0;
+  const a = ang * Math.PI / 180, s = size / 2, hw = s * .95, sw = s * .30, hh = s * .95;
+  const pts = [[0,-s],[hw,-s+hh],[sw,-s+hh],[sw,s],[-sw,s],[-sw,-s+hh],[-hw,-s+hh]];
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => {
+    const px = cx + x * Math.cos(a) - y * Math.sin(a), py = cy + x * Math.sin(a) + y * Math.cos(a);
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  });
+  ctx.closePath(); ctx.fill();
+}
+
+function drawNode(ctx, b, k, ox, oy) {
+  const n = b.n, X = ox + b.x * k, Y = oy + b.y * k, W = b.w * k, H = b.h * k;
+  if (isBox(n)) { if (n.bg) { ctx.fillStyle = n.bg; ctx.fillRect(X, Y, W, H); } return; }
+  if (n.type === 'text') {
+    ctx.font = fontFor(n, n.size * k); ctx.fillStyle = n.color || '#ffffff';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(n.text || '', X, Y + n.size * CAP * k);
+  } else if (n.type === 'badge') {
+    ctx.fillStyle = n.color;
+    if (n.shape === 'circle') { ctx.beginPath(); ctx.arc(X + W/2, Y + H/2, Math.min(W, H)/2, 0, Math.PI*2); ctx.fill(); }
+    else if (n.shape === 'rounded') { ctx.beginPath(); ctx.roundRect(X, Y, W, H, H * 0.18); ctx.fill(); }
+    else ctx.fillRect(X, Y, W, H);
+    const ns = badgeNumSize(n) * k;
+    ctx.font = fontFor({weight:'bold'}, ns);
+    ctx.fillStyle = n.textColor && n.textColor !== 'auto' ? n.textColor : (lum(n.color) > 160 ? '#191919' : '#ffffff');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(n.text || '', X + W/2, Y + H/2 + ns * CAP / 2);
+  } else if (n.type === 'arrow') {
+    drawArrow(ctx, X + W/2, Y + H/2, Math.min(W, H), n.dir, n.color || '#ffffff');
+  }
+}
+
+function render(d) {
+  const MW = Math.max(1, Math.round(num(d.mapsW, 1))), MH = Math.max(1, Math.round(num(d.mapsH, 1)));
+  const W = MW * 128, H = MH * 128;
+  const sw = Math.max(1, Math.min(W, Math.round(num(d.signW, W)))), sh = Math.max(1, Math.min(H, Math.round(num(d.signH, H))));
+  const an = d.anchor || 'mc';
+  const sx = an[1] === 'l' ? 0 : an[1] === 'r' ? W - sw : Math.round((W - sw) / 2);
+  const sy = an[0] === 't' ? 0 : an[0] === 'b' ? H - sh : Math.round((H - sh) / 2);
+  const SS = (W * 4 <= 16384 && H * 4 <= 16384) ? 4 : (W * 2 <= 16384 && H * 2 <= 16384) ? 2 : 1;
+
+  const big = document.createElement('canvas'); big.width = W * SS; big.height = H * SS;
+  const ctx = big.getContext('2d');
+  if (d.outside === 'color') { ctx.fillStyle = d.outsideColor || '#191919'; ctx.fillRect(0, 0, big.width, big.height); }
+  ctx.fillStyle = d.signColor || '#191919'; ctx.fillRect(sx * SS, sy * SS, sw * SS, sh * SS);
+
+  const padX = Math.max(0, num(d.padX)), padY = Math.max(0, num(d.padY));
+  const iw = Math.max(1, sw - 2*padX), ih = Math.max(1, sh - 2*padY);
+  const nat = measure(d.root);
+  let s = 0, boxes = [];
+  if (nat.w > 0 && nat.h > 0) {
+    s = Math.min(iw / nat.w, ih / nat.h) * Math.min(100, Math.max(5, num(d.scale, 100))) / 100;
+    const lw = iw / s, lh = ih / s;
+    place(d.root, 0, 0, lw, lh, boxes);
+    const k = SS * s, ox = (sx + padX) * SS, oy = (sy + padY) * SS;
+    ctx.save(); ctx.beginPath(); ctx.rect(sx * SS, sy * SS, sw * SS, sh * SS); ctx.clip();
+    for (const b of boxes) drawNode(ctx, b, k, ox, oy);
+    ctx.restore();
+  }
+
+  // downsample by halving: a clean box filter
+  let cur = big, f = SS;
+  while (f > 1) {
+    const nc = document.createElement('canvas'); nc.width = cur.width / 2; nc.height = cur.height / 2;
+    const c2 = nc.getContext('2d'); c2.imageSmoothingEnabled = true; c2.imageSmoothingQuality = 'high';
+    c2.drawImage(cur, 0, 0, nc.width, nc.height); cur = nc; f /= 2;
+  }
+  const out = document.createElement('canvas'); out.width = W; out.height = H;
+  const octx = out.getContext('2d'); octx.drawImage(cur, 0, 0);
+  const img = octx.getImageData(0, 0, W, H), px = img.data;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i+3] < 128) { px[i] = px[i+1] = px[i+2] = px[i+3] = 0; continue; }
+    const a = px[i+3] / 255;   // un-premultiply edge pixels before snapping
+    const c = snapRGB(Math.min(255, Math.round(px[i]/a)), Math.min(255, Math.round(px[i+1]/a)), Math.min(255, Math.round(px[i+2]/a)));
+    px[i] = c[0]; px[i+1] = c[1]; px[i+2] = c[2]; px[i+3] = 255;
+  }
+  octx.putImageData(img, 0, 0);
+
+  const pxBoxes = boxes.map(b => ({ id: b.n.id, x: sx + padX + b.x * s, y: sy + padY + b.y * s, w: b.w * s, h: b.h * s }));
+  let minText = Infinity;
+  for (const b of boxes) if (b.n.type === 'text' && b.n.text) minText = Math.min(minText, b.n.size * CAP * s);
+  return { canvas: out, W, H, MW, MH, sx, sy, sw, sh, boxes: pxBoxes, minText, scale: s };
+}
+
+// ---------- preview ----------
+const $ = id => document.getElementById(id);
+function zoomFactor(r) {
+  if (zoomMode !== 'fit') return +zoomMode;
+  const vw = $('viewport').clientWidth - 48;
+  const vh = Math.max(240, window.innerHeight - 260);
+  return Math.max(0.1, Math.min(vw / r.W, vh / r.H, 8));
+}
+function drawOverlay() {
+  const r = lastRender; if (!r) return;
+  const z = zoomFactor(r), dpr = window.devicePixelRatio || 1;
+  const img = $('out'), cv = $('overlay');
+  img.style.width = (r.W * z) + 'px'; img.style.height = (r.H * z) + 'px';
+  cv.style.width = img.style.width; cv.style.height = img.style.height;
+  cv.width = Math.round(r.W * z * dpr); cv.height = Math.round(r.H * z * dpr);
+  const c = cv.getContext('2d'); c.scale(dpr * z, dpr * z);
+  const lw = 1 / z;
+  if ($('grid').checked) {
+    c.strokeStyle = 'rgba(242,176,30,.75)'; c.lineWidth = lw; c.setLineDash([4 / z, 4 / z]);
+    for (let x = 128; x < r.W; x += 128) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, r.H); c.stroke(); }
+    for (let y = 128; y < r.H; y += 128) { c.beginPath(); c.moveTo(0, y); c.lineTo(r.W, y); c.stroke(); }
+    c.setLineDash([]);
+    c.strokeStyle = 'rgba(242,176,30,.9)'; c.strokeRect(lw/2, lw/2, r.W - lw, r.H - lw);
+  }
+  const sel = r.boxes.find(b => b.id === selId);
+  if (sel && sel.id !== doc.root.id) {
+    c.lineWidth = 2 / z; c.strokeStyle = '#1f6feb'; c.strokeRect(sel.x, sel.y, sel.w, sel.h);
+    c.fillStyle = 'rgba(31,111,235,.12)'; c.fillRect(sel.x, sel.y, sel.w, sel.h);
+  }
+  // drop marker while dragging: a bar across the parent where the piece will land
+  if (drag && drag.active && drag.marker) {
+    const m = drag.marker;
+    c.fillStyle = '#1f6feb';
+    if (m.row) c.fillRect(m.pos - 1.5 / z, m.from, 3 / z, m.len);
+    else c.fillRect(m.from, m.pos - 1.5 / z, m.len, 3 / z);
+  }
+}
+// ---- preview: click to select, drag to reorder within the piece's row/column ----
+let drag = null;
+function previewPoint(e) {
+  const r = lastRender, rect = $('overlay').getBoundingClientRect(), z = zoomFactor(r);
+  return { x: (e.clientX - rect.left) / z, y: (e.clientY - rect.top) / z };
+}
+const boxOf = id => lastRender && lastRender.boxes.find(b => b.id === id);
+const inside = (b, p) => b && p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
+function pickTarget(p) {
+  // keep the current selection when pressing inside it, so a selected group drags as a whole
+  const cur = selId && selId !== doc.root.id ? boxOf(selId) : null;
+  if (inside(cur, p)) return cur.id;
+  const hits = lastRender.boxes.filter(b => inside(b, p) && b.id !== doc.root.id);
+  if (!hits.length) return null;
+  hits.sort((a, b) => a.w * a.h - b.w * b.h);
+  return hits[0].id;
+}
+function dropSlot(p) {
+  // where among its siblings the dragged piece would land, plus a marker to draw
+  const row = drag.parent.type === 'row';
+  const sibs = drag.parent.children.filter(c => c !== drag.node).map(c => boxOf(c.id)).filter(Boolean);
+  const at = row ? p.x : p.y;
+  let index = sibs.findIndex(b => at < (row ? b.x + b.w / 2 : b.y + b.h / 2));
+  if (index < 0) index = sibs.length;
+  const pb = boxOf(drag.parent.id);
+  let pos;
+  if (!sibs.length) pos = row ? pb.x + pb.w / 2 : pb.y + pb.h / 2;
+  else if (index === 0) pos = row ? sibs[0].x : sibs[0].y;
+  else if (index === sibs.length) { const l = sibs[sibs.length - 1]; pos = row ? l.x + l.w : l.y + l.h; }
+  else { const a = sibs[index - 1], b = sibs[index]; pos = row ? (a.x + a.w + b.x) / 2 : (a.y + a.h + b.y) / 2; }
+  return { index, marker: { row, pos, from: row ? pb.y : pb.x, len: row ? pb.h : pb.w } };
+}
+$('overlay').addEventListener('pointerdown', e => {
+  if (!lastRender || e.button !== 0) return;
+  e.preventDefault();               // no text selection or image drag while reordering
+  const p = previewPoint(e), id = pickTarget(p);
+  if (!id) return;
+  select(id, true);
+  const node = findNode(doc.root, id), parent = findParent(doc.root, id);
+  if (!parent) return;
+  drag = { node, parent, x0: e.clientX, y0: e.clientY, active: false };
+  $('overlay').setPointerCapture(e.pointerId);
+});
+$('overlay').addEventListener('pointermove', e => {
+  const cv = $('overlay');
+  if (!drag) {                      // hover: show a grab hand over draggable pieces
+    if (!lastRender) return;
+    cv.className = pickTarget(previewPoint(e)) ? 'grab' : '';
+    return;
+  }
+  if (!drag.active && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 4) return;
+  drag.active = true; cv.className = 'grabbing';
+  Object.assign(drag, dropSlot(previewPoint(e)));
+  drawOverlay();
+});
+function endDrag(commit) {
+  if (!drag) return;
+  const d = drag; drag = null; $('overlay').className = '';
+  if (commit && d.active) {
+    const kids = d.parent.children, from = kids.indexOf(d.node);
+    kids.splice(from, 1);
+    kids.splice(d.index, 0, d.node);
+    if (from !== d.index) { buildTree(); refresh(); toast('Moved'); }
+    select(d.node.id, true);
+  }
+  drawOverlay();
+}
+$('overlay').addEventListener('pointerup', () => endDrag(true));
+$('overlay').addEventListener('pointercancel', () => endDrag(false));
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && drag) endDrag(false); });
+
+let pending = 0;
+function refresh() {
+  cancelAnimationFrame(pending);
+  pending = requestAnimationFrame(() => {
+    const r = render(doc); lastRender = r;
+    $('out').src = r.canvas.toDataURL('image/png');
+    $('stImg').textContent = `${r.W} × ${r.H} px`;
+    $('stBlocks').textContent = `${r.MW} × ${r.MH}`;
+    $('stSign').textContent = `${r.sw} × ${r.sh} px`;
+    const st = $('stText');
+    if (Number.isFinite(r.minText)) {
+      st.textContent = `${r.minText.toFixed(1)} px cap`;
+      st.className = r.minText < 5 ? 'warn' : '';
+      st.title = r.minText < 5 ? 'Text under ~5 px tall is hard to read on a map' : '';
+    } else st.textContent = '—';
+    $('mapsHint').textContent = `${r.W} × ${r.H} px`;
+    $('signHint').textContent = `${(r.sw/128).toFixed(2)} × ${(r.sh/128).toFixed(2)} blocks`;
+    drawOverlay();
+    $('json').value = JSON.stringify(cleanDoc(doc), null, 1);
+    store.set('wayfinder.draft', cleanDoc(doc));
+  });
+}
+window.addEventListener('resize', drawOverlay);
+$('grid').addEventListener('change', drawOverlay);
+const ZOOMS = [['fit','Fit'],['1','1×'],['2','2×'],['4','4×']];
+for (const [v, l] of ZOOMS) {
+  const b = document.createElement('button'); b.textContent = l; b.dataset.z = v; b.setAttribute('aria-pressed', v === zoomMode);
+  b.onclick = () => { zoomMode = v; document.querySelectorAll('#zoom button').forEach(x => x.setAttribute('aria-pressed', x.dataset.z === v)); drawOverlay(); };
+  $('zoom').append(b);
+}
+
+// ---------- sign settings ----------
+const ANCH = ['tl','tc','tr','ml','mc','mr','bl','bc','br'];
+for (const a of ANCH) {
+  const b = document.createElement('button'); b.dataset.a = a; b.setAttribute('aria-label', 'Anchor ' + a);
+  b.onclick = () => { doc.anchor = a; syncSettings(); refresh(); };
+  $('anchor').append(b);
+}
+function syncSettings() {
+  for (const k of ['name','mapsW','mapsH','signW','signH','padX','padY','scale']) $(k).value = doc[k];
+  $('signColor').value = doc.signColor; $('outside').value = doc.outside === 'color' ? 'color' : 'transparent';
+  $('outsideColor').value = doc.outsideColor || '#191919'; $('outsideColor').hidden = doc.outside !== 'color';
+  $('signW').max = doc.mapsW * 128; $('signH').max = doc.mapsH * 128;
+  document.querySelectorAll('#anchor button').forEach(b => b.setAttribute('aria-pressed', b.dataset.a === doc.anchor));
+}
+for (const k of ['mapsW','mapsH','signW','signH','padX','padY','scale']) {
+  $(k).addEventListener('input', () => {
+    const v = +$(k).value; if (!Number.isFinite(v) || $(k).value === '') return;
+    const wasFullW = doc.signW === doc.mapsW * 128, wasFullH = doc.signH === doc.mapsH * 128;
+    doc[k] = v;
+    if (k === 'mapsW' && wasFullW) doc.signW = v * 128;       // a full-width sign stays full width
+    if (k === 'mapsH' && wasFullH) doc.signH = v * 128;
+    if (k === 'mapsW' || k === 'mapsH') { $('signW').value = doc.signW; $('signH').value = doc.signH; $('signW').max = doc.mapsW*128; $('signH').max = doc.mapsH*128; }
+    refresh();
+  });
+}
+$('name').addEventListener('input', () => { doc.name = $('name').value; store.set('wayfinder.draft', cleanDoc(doc)); checkName(); });
+$('signColor').addEventListener('input', () => { doc.signColor = $('signColor').value; refresh(); });
+$('outside').addEventListener('change', () => { doc.outside = $('outside').value; syncSettings(); refresh(); });
+$('outsideColor').addEventListener('input', () => { doc.outsideColor = $('outsideColor').value; refresh(); });
+$('fill').onclick = () => { doc.signW = doc.mapsW * 128; doc.signH = doc.mapsH * 128; syncSettings(); refresh(); };
+
+// ---------- layout tree editor ----------
+function el(tag, props = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k in e) e[k] = v; else e.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c);
+  return e;
+}
+function findParent(root, id, parent = null) {
+  if (root.id === id) return parent;
+  if (root.children) for (const c of root.children) { const p = findParent(c, id, root); if (p !== undefined) return p; }
+  return undefined;
+}
+function findNode(root, id) {
+  if (root.id === id) return root;
+  if (root.children) for (const c of root.children) { const f = findNode(c, id); if (f) return f; }
+  return null;
+}
+function numF(label, n, key, step = 0.5, min = 0) {
+  return el('label', {}, label, el('input', { type:'number', step, min, value: n[key], oninput: e => { if (e.target.value === '') return; n[key] = +e.target.value; refresh(); } }));
+}
+// Named sizes, all relative to the standard badge, so nobody has to know the numbers.
+const TEXT_SIZES = () => [['destl', 'Destination (large)', BADGE * DEST_L], ['dest', 'Destination', DST],
+  ['large', 'Line (large)', BADGE * LARGE], ['med', 'Line (medium)', BADGE * MED],
+  ['small', 'Line (small)', BADGE * SMALL], ['sub', 'Subtitle', BADGE * 0.36]];
+const ARROW_SIZES = () => [['std', 'Standard', DST], ['large', 'Large', BADGE]];
+const BADGE_SIZES = () => [['std', 'Standard', BADGE], ['large', 'Large', BADGE * 1.25]];
+function sizeF(n, table) {
+  const opts = table();
+  const match = () => (opts.find(([, , v]) => Math.abs(v - n.size) < 0.01) || ['custom'])[0];
+  const numIn = el('input', { type:'number', step:0.5, min:0, value: +(+n.size).toFixed(2), oninput: e => {
+    if (e.target.value === '') return; n.size = +e.target.value; pick.value = match(); refresh(); } });
+  const pick = el('select', { 'aria-label':'Size', onchange: e => {
+    const o = opts.find(([k]) => k === e.target.value); if (!o) return;
+    n.size = o[2]; numIn.value = +o[2].toFixed(2); refresh(); } },
+    opts.map(([k, l]) => el('option', { value: k, textContent: l })), el('option', { value:'custom', textContent:'Custom', disabled:true }));
+  pick.value = match();
+  return [el('label', { style:'flex:2 1 130px' }, 'Size', pick), el('label', { style:'flex:1 1 70px' }, 'Number', numIn)];
+}
+function textF(label, n, key, wide) {
+  return el('label', { class: wide ? 'wide' : '' }, label, el('input', { type:'text', value: n[key] ?? '', oninput: e => { n[key] = e.target.value; refresh(); updateSummary(n); } }));
+}
+function selF(label, n, key, opts, after) {
+  const s = el('select', { onchange: e => { n[key] = e.target.value; refresh(); after && after(); } },
+    opts.map(([v, l]) => el('option', { value: v, textContent: l })));
+  s.value = n[key] ?? opts[0][0];
+  return el('label', {}, label, s);
+}
+function checkF(label, n, key) {
+  return el('label', { class:'check', style:'flex:0 0 auto' }, el('input', { type:'checkbox', checked: !!n[key], onchange: e => { n[key] = e.target.checked; refresh(); } }), label);
+}
+function colorF(label, n, key, { allowNone = false, swatches = false } = {}) {
+  const input = el('input', { type:'color', value: n[key] || '#191919', oninput: e => { n[key] = e.target.value; if (none) none.checked = false; refresh(); updateSummary(n); } });
+  let none = null;
+  const parts = [input];
+  if (allowNone) {
+    none = el('input', { type:'checkbox', checked: !n[key], onchange: e => { n[key] = e.target.checked ? null : input.value; refresh(); } });
+    parts.push(el('label', { class:'check' }, none, 'None'));
+  }
+  const box = el('span', { class:'colorbox' }, parts);
+  const wrap = el('label', { class: swatches ? 'wide' : '', style: swatches ? '' : 'flex:0 0 auto' }, label, box);
+  if (swatches) {
+    wrap.append(el('span', { class:'swatches' }, Object.entries(LINE_COLORS).map(([name, c]) =>
+      el('button', { type:'button', title: name, 'aria-label': name, style:`background:${c}`, onclick: e => { e.preventDefault(); n[key] = c; input.value = c; if (none) none.checked = false; refresh(); updateSummary(n); } }))));
+  }
+  return wrap;
+}
+const DIRS = ['up','down','left','right','up-left','up-right','down-left','down-right','u-turn','u-turn-left'].map(d => [d, d.replace('-', ' ')]);
+function summaryOf(n) {
+  if (n.type === 'text') return n.text ? `"${n.text}"` : '(empty)';
+  if (n.type === 'badge') return el('span', {}, el('span', { class:'dot', style:`background:${n.color}` }), n.text || '');
+  if (n.type === 'arrow') return n.dir;
+  if (n.type === 'spacer') return n.flex ? 'flexible' : `${n.size}`;
+  return `${n.children.length} piece${n.children.length === 1 ? '' : 's'}`;
+}
+function updateSummary(n) {
+  const s = document.querySelector(`.node[data-id="${n.id}"] > .node-head .summary`);
+  if (s) s.replaceChildren(summaryOf(n));
+}
+const NEW = {
+  text: () => T('Text', DST), subtext: () => SUB('Small text', BADGE * 0.36), badge: () => B('1', LINE_COLORS.Red, BADGE),
+  linelarge: () => lineTag('1', LINE_COLORS.Red, BADGE, 'large'), linemed: () => lineTag('1', LINE_COLORS.Red, BADGE), linesmall: () => lineTag('1', LINE_COLORS.Red, BADGE, 'small'),
+  arrow: () => A('up', DST), spacer: () => S(4), flex: () => S(4, true), row: () => R([]), column: () => C([])
+};
+function nodeView(n, isRoot) {
+  const parent = isRoot ? null : findParent(doc.root, n.id);
+  const act = (fn) => (e) => { e.stopPropagation(); fn(); buildTree(); refresh(); };
+  const idx = parent ? parent.children.indexOf(n) : -1;
+  const head = el('div', { class:'node-head', onclick: () => select(n.id) },
+    el('span', { class:`chip ${n.type}` }, n.type), el('span', { class:'summary' }, summaryOf(n)),
+    !isRoot && el('button', { class:'icon', title:'Move up', 'aria-label':'Move up', disabled: idx <= 0, onclick: act(() => { parent.children.splice(idx, 1); parent.children.splice(idx - 1, 0, n); }) }, '↑'),
+    !isRoot && el('button', { class:'icon', title:'Move down', 'aria-label':'Move down', disabled: idx >= parent.children.length - 1, onclick: act(() => { parent.children.splice(idx, 1); parent.children.splice(idx + 1, 0, n); }) }, '↓'),
+    !isRoot && el('button', { class:'icon', title:'Duplicate', 'aria-label':'Duplicate', onclick: act(() => { const c = withIds(cleanDoc({ root: n }).root); parent.children.splice(idx + 1, 0, c); selId = c.id; }) }, '⧉'),
+    !isRoot && el('button', { class:'icon danger', title:'Remove', 'aria-label':'Remove', onclick: act(() => { parent.children.splice(idx, 1); if (selId === n.id) selId = null; }) }, '✕')
+  );
+  const f = [];
+  if (n.type === 'text') f.push(textF('Text', n, 'text', true), ...sizeF(n, TEXT_SIZES), selF('Weight', n, 'weight', [['bold','Bold'],['semibold','Semibold'],['regular','Medium']]), checkF('Condensed', n, 'condensed'), colorF('Color', n, 'color'));
+  if (n.type === 'badge') f.push(textF('Number / letter', n, 'text'), ...sizeF(n, BADGE_SIZES), selF('Shape', n, 'shape', [['square','Square'],['rounded','Rounded'],['circle','Circle']]), selF('Number color', n, 'textColor', [['auto','Auto'],['#ffffff','White'],['#191919','Black']]), colorF('Line color', n, 'color', { swatches: true }));
+  if (n.type === 'arrow') f.push(selF('Direction', n, 'dir', DIRS), ...sizeF(n, ARROW_SIZES), colorF('Color', n, 'color'));
+  if (n.type === 'spacer') f.push(numF('Size', n, 'size'), checkF('Flexible (fills leftover space)', n, 'flex'));
+  if (isBox(n)) f.push(
+    selF('Direction', n, 'type', [['row','Row →'],['column','Column ↓']], () => { buildTree(); }),
+    numF('Gap', n, 'gap'), numF('Padding', n, 'pad'), numF('Min width', n, 'minW'), numF('Min height', n, 'minH'),
+    selF('Align', n, 'align', [['start','Start'],['center','Center'],['end','End'],['stretch','Stretch']]),
+    selF('Justify', n, 'justify', [['start','Start'],['center','Center'],['end','End'],['between','Spread']]),
+    colorF('Background', n, 'bg', { allowNone: true }));
+  const node = el('div', { class: 'node' + (n.id === selId ? ' sel' : ''), 'data-id': n.id }, head, el('div', { class:'fields' }, f));
+  if (isBox(n)) {
+    node.append(el('div', { class:'kids' }, n.children.map(c => nodeView(c, false))));
+    const add = el('select', { 'aria-label':'Add a piece', onchange: e => {
+      const v = e.target.value; if (!v) return;
+      const c = withIds(NEW[v]()); n.children.push(c); selId = c.id; buildTree(); refresh();
+    } }, el('option', { value:'', textContent:'+ Add piece…' }),
+      [['linelarge','Badge + Line (large)'],['linemed','Badge + Line (medium)'],['linesmall','Badge + Line (small)'],['text','Text'],['subtext','Small text'],['badge','Line badge'],['arrow','Arrow'],['spacer','Spacer'],['flex','Flexible spacer'],['row','Row'],['column','Column']].map(([v, l]) => el('option', { value: v, textContent: l })));
+    node.append(el('div', { class:'adder' }, add));
+  }
+  return node;
+}
+function buildTree() { $('tree').replaceChildren(nodeView(doc.root, true)); }
+function select(id, scroll) {
+  selId = id;
+  document.querySelectorAll('.node.sel').forEach(x => x.classList.remove('sel'));
+  const nd = document.querySelector(`.node[data-id="${id}"]`);
+  if (nd) { nd.classList.add('sel'); if (scroll) nd.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
+  drawOverlay();
+}
+
+// ---------- presets, library, json ----------
+for (const name of Object.keys(PRESETS)) $('preset').append(el('option', { value: name, textContent: name }));
+$('preset').append(el('option', { value: '', textContent: '— current sign —' }));
+$('preset').addEventListener('change', () => { if (!$('preset').value) return; loadDoc(presetDoc($('preset').value)); });
+function loadDoc(d) {
+  if (d.padX == null) d.padX = d.pad ?? 22;
+  if (d.padY == null) d.padY = d.pad ?? 40;
+  delete d.pad;
+  if (!d.sid) d.sid = uid();
+  doc = d; if (!doc.root.id) withIds(doc.root); selId = null;
+  $('exportBox').hidden = true;
+  syncSettings(); buildTree(); refresh(); checkName();
+}
+function toast(msg) { $('toast').textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => $('toast').textContent = '', 3500); }
+function libList() { return store.get('wayfinder.library') || {}; }
+function syncLib(sel) {
+  const lib = libList(), s = $('library');
+  s.replaceChildren(...(Object.keys(lib).length ? Object.keys(lib).sort().map(k => el('option', { value: k, textContent: k })) : [el('option', { value:'', textContent:'Nothing saved yet' })]));
+  if (sel) s.value = sel;
+}
+// A name can belong to only one saved sign. Saving the sign that already owns a name
+// updates it; a different sign has to pick another name.
+function nameTaken(name) { const e = libList()[name]; return !!e && e.sid !== doc.sid; }
+function checkName() {
+  const n = (doc.name || '').trim(), h = $('nameHint');
+  if (n && nameTaken(n)) { h.textContent = `Another saved sign is already called "${n}". Pick a different name to save or export this one.`; h.className = 'hint warn'; }
+  else { h.textContent = 'Used for My signs, the PNG file and the ImageFrame name.'; h.className = 'hint'; }
+}
+function saveToLibrary() {
+  const name = (doc.name || '').trim();
+  if (!name) { toast('Give the sign a name first.'); $('name').focus(); return false; }
+  if (nameTaken(name)) { checkName(); toast(`"${name}" is taken by another saved sign. Rename this one first.`); $('name').focus(); return false; }
+  doc.name = name;
+  const lib = libList(); lib[name] = cleanDoc(doc); store.set('wayfinder.library', lib);
+  syncLib(name); checkName();
+  return true;
+}
+$('libSave').onclick = () => { if (saveToLibrary()) toast(`Saved "${doc.name}" in this browser`); };
+$('libLoad').onclick = () => {
+  const k = $('library').value, lib = libList(); if (!lib[k]) return;
+  const d = JSON.parse(JSON.stringify(lib[k]));
+  if (!d.sid) { d.sid = uid(); lib[k].sid = d.sid; store.set('wayfinder.library', lib); }   // signs saved before ids existed
+  withIds(d.root); $('preset').value = ''; loadDoc(d); toast(`Loaded "${k}"`);
+};
+$('libDel').onclick = () => { const k = $('library').value, lib = libList(); if (!lib[k]) return; delete lib[k]; store.set('wayfinder.library', lib); syncLib(); toast(`Deleted "${k}"`); };
+$('jsonCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('json').value); toast('JSON copied'); }
+  catch { $('json').select(); toast('Press Ctrl+C to copy the selected JSON'); }
+};
+$('jsonApply').onclick = () => {
+  try {
+    const d = JSON.parse($('json').value);
+    if (!d.root || !isBox(d.root)) throw new Error('The JSON needs a "root" row or column.');
+    const base = presetDoc('Blank'); delete base.root;
+    if (d.pad != null && d.padX == null) { delete base.padX; delete base.padY; }
+    d.sid = uid();                              // pasted JSON is a new sign, never an existing save
+    withIds(d.root); $('preset').value = ''; loadDoc({ ...base, ...d }); toast('JSON applied');
+  } catch (e) { toast('Could not apply: ' + e.message); }
+};
+
+// ---------- download ----------
+let downloads = null;
+(async () => {
+  try { downloads = window.claude?.use ? await window.claude.use('downloads') : null; } catch { downloads = null; }
+})();
+const pngBlob = () => new Promise(r => lastRender.canvas.toBlob(r, 'image/png'));
+const fileSlug = () => ((doc.name || 'sign').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 56) || 'sign');
+$('download').onclick = async () => {
+  if (!lastRender) return;
+  const blob = await pngBlob(), file = fileSlug() + '.png';
+  if (downloads) {
+    try { await downloads.save({ filename: file, data: blob }); toast(`Saved ${file}`); }
+    catch (e) {
+      if (e?.code === 'declined') return;
+      if (e?.code === 'rate_limited') { toast('A save prompt is already open.'); return; }
+      toast('Download is not available here. Right-click the preview and choose "Save image as".');
+    }
+    return;
+  }
+  // running from the udub-signs folder: an ordinary browser download
+  const a = el('a', { href: URL.createObjectURL(blob), download: file });
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+};
+
+// ---------- export to GitHub (through serve.py, which uses the gh login) ----------
+(async () => {
+  let ok = false;
+  try { const r = await fetch('/api/ping', { headers: { 'X-Wayfinder': '1' } }); ok = r.ok && (await r.json()).ok === true; } catch {}
+  $('export').hidden = !ok; $('exportHint').hidden = ok;
+})();
+function blobToBase64(blob) {
+  return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+$('export').onclick = async () => {
+  if (!lastRender) return;
+  if (!saveToLibrary()) return;                 // exporting always saves under My signs first
+  const btn = $('export'); btn.disabled = true; btn.textContent = 'Uploading…';
+  const before = doc.exports || 0;
+  try {
+    // re-exports get _v2, _v3… so ImageFrame never sees the same name twice
+    doc.exports = before + 1;
+    const slug = fileSlug() + (doc.exports > 1 ? `_v${doc.exports}` : '');
+    const png = await blobToBase64(await pngBlob());
+    const r = await fetch('/api/export', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Wayfinder': '1' },
+      body: JSON.stringify({ slug, png, mapsW: lastRender.MW, mapsH: lastRender.MH, sign: cleanDoc(doc) }) });
+    const out = await r.json().catch(() => ({ error: `The helper answered ${r.status}.` }));
+    if (!r.ok) throw new Error(out.error || `Export failed (${r.status}).`);
+    saveToLibrary();                            // keep the export count with the saved sign
+    $('cmd').value = out.command; $('cmdLink').href = out.page;
+    $('cmdSize').textContent = `${lastRender.MW} × ${lastRender.MH}`;
+    $('exportBox').hidden = false;
+    toast('Uploaded to GitHub and saved under My signs');
+  } catch (e) {
+    doc.exports = before;
+    toast(e.message === 'Failed to fetch' ? 'Could not reach the helper. Is the Wayfinder window still open?' : e.message);
+  } finally { btn.disabled = false; btn.textContent = 'Export to GitHub'; }
+};
+$('cmdCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText($('cmd').value); toast('Command copied'); }
+  catch { $('cmd').select(); toast('Press Ctrl+C to copy the command'); }
+};
+
+// ---------- boot ----------
+(async () => {
+  const draft = store.get('wayfinder.draft');
+  let first;
+  if (draft && draft.root) { first = draft; withIds(first.root); $('preset').value = ''; }
+  else { first = presetDoc('Split, arrow in the middle'); $('preset').value = 'Split, arrow in the middle'; }
+  syncLib();
+  loadDoc(first);
+  try {
+    await Promise.all(['500','600','700'].flatMap(w => [document.fonts.load(`${w} 40px "Barlow"`), document.fonts.load(`${w} 40px "Barlow Semi Condensed"`)]));
+  } catch {}
+  snapCache.clear(); refresh();
+  document.fonts.ready.then(refresh);
+})();
+</script>

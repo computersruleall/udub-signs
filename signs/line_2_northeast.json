@@ -1,0 +1,81 @@
+{
+ "mapsW": 6,
+ "mapsH": 1,
+ "signW": 768,
+ "signH": 128,
+ "anchor": "mc",
+ "padX": 22,
+ "padY": 34,
+ "scale": 100,
+ "signColor": "#191919",
+ "outside": "transparent",
+ "outsideColor": "#191919",
+ "root": {
+  "type": "row",
+  "children": [
+   {
+    "type": "row",
+    "children": [
+     {
+      "type": "badge",
+      "text": "2",
+      "color": "#b24cd8",
+      "size": 12,
+      "shape": "square",
+      "textColor": "auto"
+     },
+     {
+      "type": "spacer",
+      "size": 2.04,
+      "flex": false
+     },
+     {
+      "type": "text",
+      "text": "Line",
+      "size": 4.92,
+      "weight": "bold",
+      "condensed": false,
+      "color": "#ffffff"
+     }
+    ],
+    "gap": 0,
+    "align": "center",
+    "justify": "start",
+    "pad": 0,
+    "bg": null
+   },
+   {
+    "type": "spacer",
+    "size": 4,
+    "flex": false
+   },
+   {
+    "type": "text",
+    "text": "To Northeast Border",
+    "size": 8.879999999999999,
+    "weight": "bold",
+    "condensed": false,
+    "color": "#ffffff"
+   },
+   {
+    "type": "spacer",
+    "size": 3,
+    "flex": false
+   },
+   {
+    "type": "arrow",
+    "dir": "up",
+    "size": 8.879999999999999,
+    "color": "#ffffff"
+   }
+  ],
+  "gap": 0,
+  "align": "center",
+  "justify": "center",
+  "pad": 0,
+  "bg": null
+ },
+ "name": "Line 2 Northeast",
+ "sid": "u5tejm6",
+ "exports": 1
+}

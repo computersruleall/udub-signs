@@ -303,6 +303,10 @@ const T = (text, size, o={}) => ({type:'text', text, size, weight:'bold', conden
 const SUB = (text, size) => T(text, size, {weight:'semibold', condensed:true, color:'#c7c7c7'});
 const B = (text, color, size, o={}) => ({type:'badge', text, color, size, shape:'square', textColor:'auto', ...o});
 const A = (dir, size, o={}) => ({type:'arrow', dir, size, color:'#ffffff', ...o});
+// Train icon (pixel art). bg: null = white train on the sign; a colour = train on a rounded square.
+const ICON = (size, o={}) => ({type:'icon', icon:'train', size, color:'#ffffff', bg:null, ...o});
+// Entrance/exit letter: dark box, thin outline, rounded corners.
+const LETTER = (text, size, o={}) => B(text, '#ffffff', size, {style:'outline', shape:'rounded', ...o});
 const S = (size, flex=false) => ({type:'spacer', size, flex});
 const R = (children, o={}) => ({type:'row', children, gap:0, align:'center', justify:'start', pad:0, bg:null, ...o});
 const C = (children, o={}) => ({type:'column', children, gap:0, align:'start', justify:'start', pad:0, bg:null, ...o});
@@ -313,7 +317,7 @@ const C = (children, o={}) => ({type:'column', children, gap:0, align:'start', j
 //   destination text and arrows                                  0.74 × badge
 //   large destination (a row as tall as a badge row)             1.30 × badge
 // "Line" is always smaller than the badge: even large Line's capitals are ~80% of it.
-const LARGE = 1.15, MED = 0.65, SMALL = 0.41, DEST = 0.74, DEST_L = 1.30;
+const LARGE = 1.15, MED = 0.65, SMALL = 0.41, DEST = 0.74, DEST_L = 1.30, STATION = 0.80;
 const lineTag = (n, color, bs, mode = 'medium', o = {}) =>
   R([B(n, color, bs, o), S(bs * 0.17), T('Line', bs * ({ small: SMALL, large: LARGE }[mode] || MED))]);
 
@@ -367,6 +371,20 @@ const PRESETS = {
       S(4, true), R([A('u-turn', 18)], {justify:'center'}), S(4, true)
     ], {align:'center'})
   }),
+  'Station entrance': () => ({ ...base(8, 1, { padY: 39 }),
+    root: R([
+      lineTag('1', LINE_COLORS['Light blue'], BADGE), S(8, true),
+      R([ICON(BADGE), S(BADGE * 0.3), T('Husky Stadium Station', BADGE * STATION)]), S(8, true),
+      R([LETTER('A', BADGE), S(BADGE * 0.2), T('Entrance', BADGE * MED)])
+    ])
+  }),
+  'Exit, in station': () => ({ ...base(6, 1, { padY: 39 }),
+    root: R([
+      T('Important Notice', BADGE * MED), S(8, true),
+      R([LETTER('B', BADGE), S(BADGE * 0.2), T('Gate', BADGE * STATION)]), S(8, true),
+      T('Exit only', BADGE * MED)
+    ])
+  }),
   'Blank': () => ({ ...base(5, 1),
     root: R([lineTag('1', LINE_COLORS.Red, BADGE, 'small'), S(4), T('Destination', DST), S(3), A('up', DST)], {justify:'center'})
   })
@@ -395,7 +413,35 @@ function fontFor(n, px) {
 function textW(str, font) { mctx.font = font; return mctx.measureText(str).width; }
 const isBox = n => n.type === 'row' || n.type === 'column';
 const num = (v, d=0) => Number.isFinite(+v) ? +v : d;
-function badgeNumSize(n) { return n.size * ((n.text || '').length > 1 ? 0.64 : 0.8); }
+function badgeNumSize(n) {
+  if (n.style === 'outline') return n.size * ((n.text || '').length > 1 ? 0.56 : 0.68);
+  return n.size * ((n.text || '').length > 1 ? 0.64 : 0.8);
+}
+// Front-view metro train. W = the train, K = a cut-out (windshield glow / headlight surround).
+const TRAIN = [
+  '...WWWWWW...',
+  '.WWWWWWWWWW.',
+  '.WW......WW.',
+  '.WW......WW.',
+  '.WW......WW.',
+  '.WWWWWWWWWW.',
+  '.WWWWWWWWWW.',
+  '.WK.WWWW.KW.',
+  '.WWWWWWWWWW.',
+  '..WWWWWWWW..',
+  '..WW....WW..',
+  '.WW......WW.',
+  'WW........WW',
+];
+// With a background, the train sits on a 16 x 16 square with its corners knocked off.
+function iconGrid(n) {
+  if (!n.bg) return TRAIN;
+  const size = 16, w = TRAIN[0].length, h = TRAIN.length, ox = (size - w) >> 1, oy = (size - h) >> 1;
+  const g = Array.from({ length: size }, () => Array(size).fill('B'));
+  TRAIN.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'W') g[y + oy][x + ox] = 'W'; }));
+  for (const [x, y] of [[0, 0], [size - 1, 0], [0, size - 1], [size - 1, size - 1]]) g[y][x] = '.';
+  return g.map(r => r.join(''));
+}
 
 function measure(n) {
   let w = 0, h = 0;
@@ -406,6 +452,9 @@ function measure(n) {
     const ns = badgeNumSize(n), tw = textW(n.text || '', fontFor({weight:'bold'}, 100)) / 100 * ns;
     if (n.shape === 'circle') { w = h = Math.max(n.size, tw + n.size * 0.45); }
     else { h = n.size; w = Math.max(n.size, tw + n.size * 0.32); }
+  } else if (n.type === 'icon') {
+    const g = iconGrid(n);
+    h = num(n.size, 12); w = h * g[0].length / g.length;
   } else if (n.type === 'arrow' || n.type === 'spacer') {
     w = h = num(n.size, 4);
   } else if (isBox(n)) {
@@ -477,13 +526,33 @@ function drawArrow(ctx, cx, cy, size, dir, color) {
   ctx.closePath(); ctx.fill();
 }
 
-function drawNode(ctx, b, k, ox, oy) {
+function drawNode(ctx, b, k, ox, oy, SS) {
   const n = b.n, X = ox + b.x * k, Y = oy + b.y * k, W = b.w * k, H = b.h * k;
   if (isBox(n)) { if (n.bg) { ctx.fillStyle = n.bg; ctx.fillRect(X, Y, W, H); } return; }
   if (n.type === 'text') {
     ctx.font = fontFor(n, n.size * k); ctx.fillStyle = n.color || '#ffffff';
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillText(n.text || '', X, Y + n.size * CAP * k);
+  } else if (n.type === 'badge' && n.style === 'outline') {
+    const lw = Math.max(SS, H * 0.07), c = n.color || '#ffffff';
+    ctx.strokeStyle = c; ctx.lineWidth = lw;
+    ctx.beginPath();
+    if (n.shape === 'circle') ctx.arc(X + W/2, Y + H/2, Math.min(W, H)/2 - lw/2, 0, Math.PI*2);
+    else ctx.roundRect(X + lw/2, Y + lw/2, W - lw, H - lw, n.shape === 'square' ? 0 : H * 0.14);
+    ctx.stroke();
+    const ns = badgeNumSize(n) * k;
+    ctx.font = fontFor({weight:'bold'}, ns); ctx.fillStyle = c;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(n.text || '', X + W/2, Y + H/2 + ns * CAP / 2);
+  } else if (n.type === 'icon') {
+    // whole output pixels per cell, so the pixel art stays crisp on a map
+    const g = iconGrid(n), rows = g.length, cols = g[0].length;
+    const cell = Math.max(1, Math.floor(H / SS / rows)) * SS;
+    const gx = Math.round((X + (W - cols * cell) / 2) / SS) * SS, gy = Math.round((Y + (H - rows * cell) / 2) / SS) * SS;
+    g.forEach((r, y) => [...r].forEach((ch, x) => {
+      const fill = ch === 'W' ? (n.color || '#ffffff') : ch === 'B' ? n.bg : null;
+      if (fill) { ctx.fillStyle = fill; ctx.fillRect(gx + x * cell, gy + y * cell, cell, cell); }
+    }));
   } else if (n.type === 'badge') {
     ctx.fillStyle = n.color;
     if (n.shape === 'circle') { ctx.beginPath(); ctx.arc(X + W/2, Y + H/2, Math.min(W, H)/2, 0, Math.PI*2); ctx.fill(); }
@@ -527,7 +596,7 @@ function render(d) {
     place(d.root, 0, 0, lw, lh, boxes);
     const k = SS * s, ox = (sx + padX) * SS, oy = (sy + padY) * SS;
     ctx.save(); ctx.beginPath(); ctx.rect(sx * SS, sy * SS, sw * SS, sh * SS); ctx.clip();
-    for (const b of boxes) drawNode(ctx, b, k, ox, oy);
+    for (const b of boxes) drawNode(ctx, b, k, ox, oy, SS);
     ctx.restore();
   }
 
@@ -763,7 +832,7 @@ function numF(label, n, key, step = 0.5, min = 0) {
   return el('label', {}, label, el('input', { type:'number', step, min, value: n[key], oninput: e => { if (e.target.value === '') return; n[key] = +e.target.value; refresh(); } }));
 }
 // Named sizes, all relative to the standard badge, so nobody has to know the numbers.
-const TEXT_SIZES = () => [['destl', 'Destination (large)', BADGE * DEST_L], ['dest', 'Destination', DST],
+const TEXT_SIZES = () => [['destl', 'Destination (large)', BADGE * DEST_L], ['station', 'Station name', BADGE * STATION], ['dest', 'Destination', DST],
   ['large', 'Line (large)', BADGE * LARGE], ['med', 'Line (medium)', BADGE * MED],
   ['small', 'Line (small)', BADGE * SMALL], ['sub', 'Subtitle', BADGE * 0.36]];
 const ARROW_SIZES = () => [['std', 'Standard', DST], ['large', 'Large', BADGE]];
@@ -811,7 +880,9 @@ function colorF(label, n, key, { allowNone = false, swatches = false } = {}) {
 const DIRS = ['up','down','left','right','up-left','up-right','down-left','down-right','u-turn','u-turn-left'].map(d => [d, d.replace('-', ' ')]);
 function summaryOf(n) {
   if (n.type === 'text') return n.text ? `"${n.text}"` : '(empty)';
+  if (n.type === 'badge' && n.style === 'outline') return `[${n.text || ''}] outlined`;
   if (n.type === 'badge') return el('span', {}, el('span', { class:'dot', style:`background:${n.color}` }), n.text || '');
+  if (n.type === 'icon') return n.bg ? el('span', {}, el('span', { class:'dot', style:`background:${n.bg}` }), 'train on square') : 'train';
   if (n.type === 'arrow') return n.dir;
   if (n.type === 'spacer') return n.flex ? 'flexible' : `${n.size}`;
   return `${n.children.length} piece${n.children.length === 1 ? '' : 's'}`;
@@ -822,6 +893,7 @@ function updateSummary(n) {
 }
 const NEW = {
   text: () => T('Text', DST), subtext: () => SUB('Small text', BADGE * 0.36), badge: () => B('1', LINE_COLORS.Red, BADGE),
+  icon: () => ICON(BADGE), letter: () => LETTER('A', BADGE),
   linelarge: () => lineTag('1', LINE_COLORS.Red, BADGE, 'large'), linemed: () => lineTag('1', LINE_COLORS.Red, BADGE), linesmall: () => lineTag('1', LINE_COLORS.Red, BADGE, 'small'),
   arrow: () => A('up', DST), spacer: () => S(4), flex: () => S(4, true), row: () => R([]), column: () => C([])
 };
@@ -838,7 +910,13 @@ function nodeView(n, isRoot) {
   );
   const f = [];
   if (n.type === 'text') f.push(textF('Text', n, 'text', true), ...sizeF(n, TEXT_SIZES), selF('Weight', n, 'weight', [['bold','Bold'],['semibold','Semibold'],['regular','Medium']]), checkF('Condensed', n, 'condensed'), colorF('Color', n, 'color'));
-  if (n.type === 'badge') f.push(textF('Number / letter', n, 'text'), ...sizeF(n, BADGE_SIZES), selF('Shape', n, 'shape', [['square','Square'],['rounded','Rounded'],['circle','Circle']]), selF('Number color', n, 'textColor', [['auto','Auto'],['#ffffff','White'],['#191919','Black']]), colorF('Line color', n, 'color', { swatches: true }));
+  if (n.type === 'badge') f.push(textF('Number / letter', n, 'text'), ...sizeF(n, BADGE_SIZES),
+    selF('Style', n, 'style', [['solid','Solid'],['outline','Outlined']], () => { buildTree(); updateSummary(n); }),
+    selF('Shape', n, 'shape', [['square','Square'],['rounded','Rounded'],['circle','Circle']]),
+    n.style === 'outline' ? null : selF('Number color', n, 'textColor', [['auto','Auto'],['#ffffff','White'],['#191919','Black']]),
+    colorF(n.style === 'outline' ? 'Outline and letter color' : 'Line color', n, 'color', { swatches: true }));
+  if (n.type === 'icon') f.push(...sizeF(n, BADGE_SIZES), colorF('Train color', n, 'color', { swatches: true }),
+    colorF('Background square', n, 'bg', { allowNone: true, swatches: true }));
   if (n.type === 'arrow') f.push(selF('Direction', n, 'dir', DIRS), ...sizeF(n, ARROW_SIZES), colorF('Color', n, 'color'));
   if (n.type === 'spacer') f.push(numF('Size', n, 'size'), checkF('Flexible (fills leftover space)', n, 'flex'));
   if (isBox(n)) f.push(
@@ -854,7 +932,7 @@ function nodeView(n, isRoot) {
       const v = e.target.value; if (!v) return;
       const c = withIds(NEW[v]()); n.children.push(c); selId = c.id; buildTree(); refresh();
     } }, el('option', { value:'', textContent:'+ Add piece…' }),
-      [['linelarge','Badge + Line (large)'],['linemed','Badge + Line (medium)'],['linesmall','Badge + Line (small)'],['text','Text'],['subtext','Small text'],['badge','Line badge'],['arrow','Arrow'],['spacer','Spacer'],['flex','Flexible spacer'],['row','Row'],['column','Column']].map(([v, l]) => el('option', { value: v, textContent: l })));
+      [['icon','Train icon'],['letter','Entrance letter (outlined)'],['linelarge','Badge + Line (large)'],['linemed','Badge + Line (medium)'],['linesmall','Badge + Line (small)'],['text','Text'],['subtext','Small text'],['badge','Line badge'],['arrow','Arrow'],['spacer','Spacer'],['flex','Flexible spacer'],['row','Row'],['column','Column']].map(([v, l]) => el('option', { value: v, textContent: l })));
     node.append(el('div', { class:'adder' }, add));
   }
   return node;

@@ -138,7 +138,7 @@ textarea { font-family: var(--mono); font-size: 12px; min-height: 180px; resize:
 .cmdrow { display: flex; gap: 6px; }
 .cmdrow input { font-family: var(--mono); font-size: 12px; }
 .exportbox a { color: var(--accent-text); font-weight: 600; }
-#nameHint.warn { color: var(--danger); font-weight: 600; }
+#fitHint.warn, #nameHint.warn { color: var(--danger); font-weight: 600; }
 #toast { min-height: 1.2em; font-size: 13px; color: var(--accent-text); font-weight: 600; }
 @media (prefers-reduced-motion: no-preference) { .node { transition: border-color .12s; } }
 </style>
@@ -191,7 +191,15 @@ textarea { font-family: var(--mono); font-size: 12px; min-height: 180px; resize:
           <label>Content scale % <input type="number" id="scale" min="20" max="100" step="5"></label>
           <label style="flex:0 0 auto">Sign color <span class="colorbox"><input type="color" id="signColor"></span></label>
         </div>
-        <p class="hint">Top/bottom padding sets how big the text gets on a bar. Content scale below 100% shrinks everything further; flexible spacers still stretch to the sign edges.</p>
+        <div class="row">
+          <label style="flex:1 1 100%">When the sign size changes
+            <span class="seg" id="fitMode" role="group" aria-label="When the sign size changes">
+              <button type="button" data-f="scale">Scale to fit</button>
+              <button type="button" data-f="space">Keep sizes, add space</button>
+            </span>
+          </label>
+        </div>
+        <p class="hint" id="fitHint"></p>
       </div>
 
       <div class="section">
@@ -508,9 +516,13 @@ function render(d) {
   const padX = Math.max(0, num(d.padX)), padY = Math.max(0, num(d.padY));
   const iw = Math.max(1, sw - 2*padX), ih = Math.max(1, sh - 2*padY);
   const nat = measure(d.root);
-  let s = 0, boxes = [];
+  let s = 0, base = 0, shrunk = false, boxes = [];
   if (nat.w > 0 && nat.h > 0) {
-    s = Math.min(iw / nat.w, ih / nat.h) * Math.min(100, Math.max(5, num(d.scale, 100))) / 100;
+    const fitS = Math.min(iw / nat.w, ih / nat.h);
+    const space = d.fit === 'space' && num(d.lockBase) > 0;
+    base = space ? num(d.lockBase) : fitS;
+    s = base * Math.min(space ? 300 : 100, Math.max(5, num(d.scale, 100))) / 100;
+    if (s > fitS) { s = fitS; shrunk = true; }     // never overflow the sign
     const lw = iw / s, lh = ih / s;
     place(d.root, 0, 0, lw, lh, boxes);
     const k = SS * s, ox = (sx + padX) * SS, oy = (sy + padY) * SS;
@@ -540,7 +552,7 @@ function render(d) {
   const pxBoxes = boxes.map(b => ({ id: b.n.id, x: sx + padX + b.x * s, y: sy + padY + b.y * s, w: b.w * s, h: b.h * s }));
   let minText = Infinity;
   for (const b of boxes) if (b.n.type === 'text' && b.n.text) minText = Math.min(minText, b.n.size * CAP * s);
-  return { canvas: out, W, H, MW, MH, sx, sy, sw, sh, boxes: pxBoxes, minText, scale: s };
+  return { canvas: out, W, H, MW, MH, sx, sy, sw, sh, boxes: pxBoxes, minText, scale: s, base, shrunk };
 }
 
 // ---------- preview ----------
@@ -668,6 +680,10 @@ function refresh() {
     } else st.textContent = '—';
     $('mapsHint').textContent = `${r.W} × ${r.H} px`;
     $('signHint').textContent = `${(r.sw/128).toFixed(2)} × ${(r.sh/128).toFixed(2)} blocks`;
+    const fh = $('fitHint');
+    if (doc.fit === 'space' && r.shrunk) { fh.textContent = 'The sign is too small to keep this size, so everything was shrunk just enough to fit.'; fh.className = 'hint warn'; }
+    else if (doc.fit === 'space') { fh.textContent = 'Text and icons keep their size; flexible spacers take up the extra room. Content scale still resizes them on purpose.'; fh.className = 'hint'; }
+    else { fh.textContent = 'Text and icons grow or shrink with the sign. Top/bottom padding sets how big they get on a bar.'; fh.className = 'hint'; }
     drawOverlay();
     $('json').value = JSON.stringify(cleanDoc(doc), null, 1);
     store.set('wayfinder.draft', cleanDoc(doc));
@@ -695,6 +711,8 @@ function syncSettings() {
   $('outsideColor').value = doc.outsideColor || '#191919'; $('outsideColor').hidden = doc.outside !== 'color';
   $('signW').max = doc.mapsW * 128; $('signH').max = doc.mapsH * 128;
   document.querySelectorAll('#anchor button').forEach(b => b.setAttribute('aria-pressed', b.dataset.a === doc.anchor));
+  document.querySelectorAll('#fitMode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === (doc.fit || 'scale')));
+  $('scale').max = doc.fit === 'space' ? 300 : 100;
 }
 for (const k of ['mapsW','mapsH','signW','signH','padX','padY','scale']) {
   $(k).addEventListener('input', () => {
@@ -711,6 +729,14 @@ $('name').addEventListener('input', () => { doc.name = $('name').value; store.se
 $('signColor').addEventListener('input', () => { doc.signColor = $('signColor').value; refresh(); });
 $('outside').addEventListener('change', () => { doc.outside = $('outside').value; syncSettings(); refresh(); });
 $('outsideColor').addEventListener('input', () => { doc.outsideColor = $('outsideColor').value; refresh(); });
+document.querySelectorAll('#fitMode button').forEach(b => b.onclick = () => {
+  const f = b.dataset.f;
+  if ((doc.fit || 'scale') === f) return;
+  if (f === 'space' && lastRender && lastRender.base > 0) doc.lockBase = lastRender.base;   // freeze today's size
+  doc.fit = f;
+  if (f === 'scale' && doc.scale > 100) doc.scale = 100;
+  syncSettings(); refresh();
+});
 $('fill').onclick = () => { doc.signW = doc.mapsW * 128; doc.signH = doc.mapsH * 128; syncSettings(); refresh(); };
 
 // ---------- layout tree editor ----------
